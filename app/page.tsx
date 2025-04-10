@@ -6,6 +6,7 @@ export default function Home() {
     <div className="min-h-screen bg-white">
       <Navbar />
       <div className="container mx-auto px-4 py-4">
+        <h1 className="text-2xl font-bold mb-4">Olympic Market Predictions</h1>
         <MarketsGrid />
       </div>
     </div>
