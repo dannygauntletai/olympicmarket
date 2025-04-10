@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -8,15 +8,15 @@ import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CreditCard, DollarSign, Wallet } from "lucide-react"
 import { Navbar } from "@/components/navbar"
+import { useVenmoAuth } from "@/hooks/useVenmoAuth"
 
 export default function ProfilePage() {
   const [balance, setBalance] = useState("1,245.00")
   const [withdrawAmount, setWithdrawAmount] = useState("")
-  const [venmoConnected, setVenmoConnected] = useState(false)
+  const { venmoUser, connectVenmo, disconnectVenmo } = useVenmoAuth()
 
   const handleConnectVenmo = () => {
-    // In a real app, this would open Venmo OAuth flow
-    setVenmoConnected(true)
+    connectVenmo()
   }
 
   const handleWithdraw = () => {
@@ -34,7 +34,7 @@ export default function ProfilePage() {
     const newBalance = (currentBalance - amount).toFixed(2)
     setBalance(new Intl.NumberFormat().format(Number.parseFloat(newBalance)))
     setWithdrawAmount("")
-    alert(`${amount} withdrawn to your Venmo account`)
+    alert(`${amount} withdrawn to your Venmo account @${venmoUser.username}`)
   }
 
   return (
@@ -84,13 +84,13 @@ export default function ProfilePage() {
               <TabsTrigger value="deposit">Deposit</TabsTrigger>
             </TabsList>
             <TabsContent value="withdraw">
-              <Card className={!venmoConnected ? "bg-transparent" : ""}>
+              <Card className={!venmoUser.isConnected ? "bg-transparent" : ""}>
                 <CardHeader>
                   <CardTitle>Withdraw to Venmo</CardTitle>
                   <CardDescription>Withdraw your funds to your connected Venmo account.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {!venmoConnected ? (
+                  {!venmoUser.isConnected ? (
                     <div className="flex flex-col items-center gap-4 py-4">
                       <p className="text-center text-sm text-muted-foreground">
                         Connect your Venmo account to withdraw funds.
@@ -105,10 +105,18 @@ export default function ProfilePage() {
                         <div className="h-8 w-8 rounded-full bg-[#008CFF] flex items-center justify-center text-white font-bold">
                           V
                         </div>
-                        <div>
+                        <div className="flex-1">
                           <p className="text-sm font-medium">Venmo Connected</p>
-                          <p className="text-xs text-muted-foreground">@username</p>
+                          <p className="text-xs text-muted-foreground">@{venmoUser.username}</p>
                         </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={disconnectVenmo}
+                          className="text-xs"
+                        >
+                          Disconnect
+                        </Button>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="amount">Amount</Label>
@@ -134,20 +142,20 @@ export default function ProfilePage() {
                   )}
                 </CardContent>
                 <CardFooter>
-                  <Button className="w-full" disabled={!venmoConnected || !withdrawAmount} onClick={handleWithdraw}>
+                  <Button className="w-full" disabled={!venmoUser.isConnected || !withdrawAmount} onClick={handleWithdraw}>
                     Withdraw to Venmo
                   </Button>
                 </CardFooter>
               </Card>
             </TabsContent>
             <TabsContent value="deposit">
-              <Card className={!venmoConnected ? "bg-transparent" : ""}>
+              <Card className={!venmoUser.isConnected ? "bg-transparent" : ""}>
                 <CardHeader>
                   <CardTitle>Deposit Funds</CardTitle>
                   <CardDescription>Add funds to your account using Venmo.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {!venmoConnected ? (
+                  {!venmoUser.isConnected ? (
                     <div className="flex flex-col items-center gap-4 py-4">
                       <p className="text-center text-sm text-muted-foreground">
                         Connect your Venmo account to deposit funds.
@@ -190,7 +198,7 @@ export default function ProfilePage() {
                   )}
                 </CardContent>
                 <CardFooter>
-                  <Button className="w-full" disabled={!venmoConnected}>
+                  <Button className="w-full" disabled={!venmoUser.isConnected}>
                     Deposit from Venmo
                   </Button>
                 </CardFooter>
